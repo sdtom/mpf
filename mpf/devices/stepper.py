@@ -1,4 +1,6 @@
-"""Implements a servo in MPF."""
+"""Implements a stepper in MPF."""
+import logging
+
 from mpf.core.delays import DelayManager
 
 from mpf.core.device_monitor import DeviceMonitor
@@ -21,6 +23,7 @@ class Stepper(SystemWideDevice):
 
     def __init__(self, machine, name):
         """Initialise stepper."""
+        self.log = self.log = logging.getLogger('Stepper')
         self.hw_stepper = None
         self.platform = None        # type: Stepper
         self._cachedPosition = 0    # in user units
@@ -40,6 +43,7 @@ class Stepper(SystemWideDevice):
         super().__init__(machine, name)
 
     def _initialize(self):
+        self.log.debug('Stepper Initializing')
         self.platform = self.machine.get_platform_sections('stepper_controllers', self.config['platform'])
 
         for position in self.config['named_positions']:
@@ -158,6 +162,7 @@ class Stepper(SystemWideDevice):
 
     @event_handler(1)
     def reset(self, **kwargs):
+        self.log.debug('Resetting')
         """Stop Motor."""
         del kwargs
         self.stop()

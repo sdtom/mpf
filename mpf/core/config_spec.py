@@ -1211,6 +1211,7 @@ steppers:
     reset_events: dict|str:ms|machine_reset_phase_3, ball_starting, ball_will_end, service_mode_entered
     number: single|str|
     platform: single|str|None
+    debug: single|bool|False
 switch_player:
     __valid_in__: machine
     start_event: single|str|machine_reset_phase_3
@@ -1336,6 +1337,7 @@ trigger_player:                                    # todo
 trinamics_steprocker:
     __valid_in__: machine
     port: single|str|
+    debug: single|bool|False
 video_pools:
     __valid_in__: machine, mode                      # todo add to validator
 videos:

@@ -35,6 +35,7 @@ class TrinamicsStepRocker(StepperPlatform):
     def initialize(self):
         """Initialise trinamics steprocker platform."""
         yield from super().initialize()
+        self.log.debug("Connecting to to Steprocker")
 
         # validate our config (has to be in intialize since config_processor
         # is not read in __init__)
@@ -66,6 +67,7 @@ class TrinamicsTMCLStepper(StepperPlatformInterface):
         self._clockFreq = 16000000.0
         self.config = config
         self.log = logging.getLogger('TMCL Stepper')
+        self.log.debug('Initialize Stepper')
         self._mn = int(number)
         self.TMCL = tmcl_device
         self._move_current = int(2.55 * self.config['move_current'])    # percent to 0...255(100%)
@@ -90,6 +92,7 @@ class TrinamicsTMCLStepper(StepperPlatformInterface):
     # Public Stepper Platform Interface
     def home(self):
         """Home an axis, resetting 0 position."""
+        self.log.debug('Homing Stepper')
         self.TMCL.rfs(self._mn, 'STOP')  # in case in progress
         self._set_home_parameters()
         self.TMCL.rfs(self._mn, 'START')
@@ -97,6 +100,7 @@ class TrinamicsTMCLStepper(StepperPlatformInterface):
 
     def move_abs_pos(self, position):
         """Move axis to a certain absolute position."""
+        self.log.debug('Moving stepper to' + str(position))
         microstep_pos = self._uu_to_microsteps(position)
         self.TMCL.mvp(self._mn, "ABS", microstep_pos)
 
