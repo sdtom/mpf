@@ -154,8 +154,8 @@ class Stepper(SystemWideDevice):
         if self.hw_stepper.is_move_complete():
             self._isMoving = False
             self._isHomed = True
-            self.machine.events.post('stepper_' + self.name + "_ready")
-            '''event: stepper_(name)_ready'''
+            # now move to reset position
+            self.move_abs_pos(self._resetPosition)
         else:
             # reschedule
             self._schedule_home_complete_check()
@@ -163,12 +163,12 @@ class Stepper(SystemWideDevice):
     @event_handler(1)
     def reset(self, **kwargs):
         self.log.debug('Resetting')
-        """Stop Motor."""
         del kwargs
         self.stop()
+
+        """ If position mode, home """
         if self.positionMode:
-            self.home()
-            self.move_abs_pos(self._resetPosition)
+            self.home()            
 
     @event_handler(5)
     def _position_event(self, position, **kwargs):

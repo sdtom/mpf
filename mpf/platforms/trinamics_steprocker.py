@@ -35,12 +35,13 @@ class TrinamicsStepRocker(StepperPlatform):
     def initialize(self):
         """Initialise trinamics steprocker platform."""
         yield from super().initialize()
-        self.log.debug("Connecting to to Steprocker")
+        self.log.debug("initialize()")
 
         # validate our config (has to be in intialize since config_processor
         # is not read in __init__)
         self.config = self.machine.config_validator.validate_config("trinamics_steprocker", self.config)
-        self.TMCL = TMCLDevice(self.config['port'], False)
+        self.debug = self.config['debug']
+        self.TMCL = TMCLDevice(self.config['port'], debug)
 
     def stop(self):
         """Close serial."""
@@ -85,7 +86,9 @@ class TrinamicsTMCLStepper(StepperPlatformInterface):
                                        self._move_current, self._hold_current,
                                        self._get_micro_step_mode(self._microstep_per_fullstep), False)
         # apply pulse and ramp divisors as well
+        self.log.debug('setting pulse_div:' + str(self._pulse_div))
         self.TMCL.sap(self._mn, 154, self._pulse_div)
+        self.log.debug('setting ramp_div:' + str(self._ramp_div))
         self.TMCL.sap(self._mn, 153, self._ramp_div)
         self._homingActive = False
 
@@ -207,10 +210,15 @@ class TrinamicsTMCLStepper(StepperPlatformInterface):
     def _set_important_parameters(self, maxspeed=2000, maxaccel=2000,
                                   maxcurrent=72, standbycurrent=32,
                                   microstep_resolution=1, store=False):
+        self.log.debug('Setting microstep:' + str(microstep_resolution))
         self.TMCL.sap(self._mn, 140, int(microstep_resolution))
+        self.log.debug('Setting maxspeed:' + str(maxspeed))
         self.TMCL.sap(self._mn, 4, int(maxspeed))
+        self.log.debug('Setting maxaccel:' + str(maxaccel))
         self.TMCL.sap(self._mn, 5, int(maxaccel))
+        self.log.debug('Setting maxcurrent:' + str(maxcurrent))
         self.TMCL.sap(self._mn, 6, int(maxcurrent))
+        self.log.debug('Setting standbycurrent:' + str(standbycurrent))
         self.TMCL.sap(self._mn, 7, int(standbycurrent))
         if not bool(store):
             return
@@ -230,8 +238,10 @@ class TrinamicsTMCLStepper(StepperPlatformInterface):
         # self.TMCL.sap(self._mn, 149, ) #soft stop flag
         self.TMCL.sap(self._mn, 194, self._homing_speed)    # referencing search speed
         if self._home_direction == 'clockwise':
+            self.log.debug('setting clockwise homing:' + str(self._homing_speed))
             self.TMCL.sap(self._mn, 193, 8)     # ref. search mode
         elif self._home_direction == 'counterclockwise':
+            self.log.debug('setting counterclockwise homing:' + str(self._homing_speed))
             self.TMCL.sap(self._mn, 193, 7)
         # self.TMCL.sap(self._mn, 195, ) #referencing switch speed
         # self.TMCL.sap(self._mn, 196, ) # distance end switches
