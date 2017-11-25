@@ -41,7 +41,7 @@ class TrinamicsStepRocker(StepperPlatform):
         # is not read in __init__)
         self.config = self.machine.config_validator.validate_config("trinamics_steprocker", self.config)
         self.debug = self.config['debug']
-        self.TMCL = TMCLDevice(self.config['port'], debug)
+        self.TMCL = TMCLDevice(self.config['port'], self.debug)
 
     def stop(self):
         """Close serial."""
