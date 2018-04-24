@@ -1,4 +1,5 @@
 import serial
+import logging
 
 class TMCLError(Exception):
     pass
@@ -243,6 +244,7 @@ class TMCLDevice(object):
         self._port = port
         self._debug = debug
         self.serial = serial.Serial(port)
+        self.log = logging.getLogger('TMCL')
 
     def stop(self):
         """Close serial."""
@@ -254,13 +256,26 @@ class TMCLDevice(object):
         req = encodeRequestCommand(*request)
         req = list(map(ord,req))
         if self._debug:
-            print(("send to TMCL: ",self._hexString(req),decodeRequestCommand(req)))
+            reqCmd = decodeRequestCommand(req)
+            self.log.debug('Got: command:{},value:{},checksum:{},type:{},motor:{},module:{}'.format( \
+                reqCmd['command-number'], \
+                reqCmd['value'], \
+                reqCmd['checksum'], \
+                reqCmd['type-number'], \
+                reqCmd['motor-number'], \
+                reqCmd['module-address']) )
         self.serial.write(req)
         resp = decodeReplyCommand(self.serial.read(9))
         if self._debug:
             tmp = list(resp.values())[:-1]
             tmp = encodeReplyCommand(*tmp)
-            print(("got from TMCL:",self._hexString(tmp), resp))
+            self.log.debug('Got: command:{},value:{},checksum:{},status:{},reply_addr:{},module:{}'.format( \
+                resp['command-number'], \
+                resp['value'], \
+                resp['checksum'], \
+                resp['status'], \
+                resp['reply-address'], \
+                resp['module-address']) )
         return resp['status'], resp['value']
 
     def _hexString(self, cmd):
@@ -273,7 +288,7 @@ class TMCLDevice(object):
             temp = [i for i in cmd]
 
         s = ['{:x}'.format(i).rjust(2) for i in temp]
-        return "[" + ", ".join(s) + "]"
+        return "[" + ",".join(s) + "]"
 
     def _pn_checkrange(self, parameter_number, value, prefix):
         pn = parameter_number

@@ -1,4 +1,6 @@
-"""Implements a servo in MPF."""
+"""Implements a stepper in MPF."""
+import logging
+
 from mpf.core.delays import DelayManager
 
 from mpf.core.device_monitor import DeviceMonitor
@@ -21,6 +23,7 @@ class Stepper(SystemWideDevice):
 
     def __init__(self, machine, name):
         """Initialise stepper."""
+        self.log = self.log = logging.getLogger('Stepper')
         self.hw_stepper = None
         self.platform = None        # type: Stepper
         self._cachedPosition = 0    # in user units
@@ -40,6 +43,7 @@ class Stepper(SystemWideDevice):
         super().__init__(machine, name)
 
     def _initialize(self):
+        self.log.debug('Stepper Initializing')
         self.platform = self.machine.get_platform_sections('stepper_controllers', self.config['platform'])
 
         for position in self.config['named_positions']:
@@ -150,20 +154,21 @@ class Stepper(SystemWideDevice):
         if self.hw_stepper.is_move_complete():
             self._isMoving = False
             self._isHomed = True
-            self.machine.events.post('stepper_' + self.name + "_ready")
-            '''event: stepper_(name)_ready'''
+            # now move to reset position
+            self.move_abs_pos(self._resetPosition)
         else:
             # reschedule
             self._schedule_home_complete_check()
 
     @event_handler(1)
     def reset(self, **kwargs):
-        """Stop Motor."""
+        self.log.debug('Resetting')
         del kwargs
         self.stop()
+
+        """ If position mode, home """
         if self.positionMode:
-            self.home()
-            self.move_abs_pos(self._resetPosition)
+            self.home()            
 
     @event_handler(5)
     def _position_event(self, position, **kwargs):
